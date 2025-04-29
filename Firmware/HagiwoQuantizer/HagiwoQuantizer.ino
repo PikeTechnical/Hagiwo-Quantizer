@@ -342,8 +342,8 @@ void DAC(long CV_OUT) { //CV_12bit_0-4095
  digitalWrite(triggerPin, HIGH);//trigger on
  //-----------slide OFF時のCV出力------------------
  if ( slide == 0 || slide_time <= 3) {
-   MCP.analogWrite((CV_OUT >> 8) & 0x0F);
-   MCP.analogWrite(CV_OUT, 0);
+   MCP.write((CV_OUT >> 8) & 0x0F);
+   MCP.write(CV_OUT, 0);
    Serial.println(CV_OUT);
    LED(0, 0, 0);
    delay(5);
@@ -356,7 +356,7 @@ void DAC(long CV_OUT) { //CV_12bit_0-4095
    if ( old_CV_OUT <= CV_OUT) {
      while ( j <= slide_time) {
        //Serial.println((old_CV_OUT + (CV_OUT - old_CV_OUT) * j / slide_time >> 8) & 0x0F);
-       MCP.analogWrite(old_CV_OUT + (CV_OUT - old_CV_OUT) * j / slide_time, 0);
+       MCP.write(old_CV_OUT + (CV_OUT - old_CV_OUT) * j / slide_time, 0);
        //Serial.println(old_CV_OUT + (CV_OUT - old_CV_OUT) * j / slide_time);
        delay(5);
        j++;
@@ -367,7 +367,7 @@ void DAC(long CV_OUT) { //CV_12bit_0-4095
    else if (old_CV_OUT > CV_OUT) {
      while ( j <= slide_time) {
        //Wire.write((old_CV_OUT - (old_CV_OUT - CV_OUT) * j / slide_time >> 8) & 0x0F);
-       MCP.analogWrite(old_CV_OUT - (old_CV_OUT - CV_OUT) * j / slide_time, 0);
+       MCP.write(old_CV_OUT - (old_CV_OUT - CV_OUT) * j / slide_time, 0);
        delay(5);
        j++;
        LED(min(j + 50, now_R), min(j + 50, now_G), min(j + 50, now_B));
@@ -380,7 +380,7 @@ void DAC(long CV_OUT) { //CV_12bit_0-4095
 }
 
 void LED(byte R, byte G, byte B) {
- analogWrite(ledPin1, R);
- analogWrite(ledPin2, G);
- analogWrite(ledPin3, B);
+ analogWrite(ledPin1, 255-R);
+ analogWrite(ledPin2, 255-G);
+ analogWrite(ledPin3, 255-B);
 }
