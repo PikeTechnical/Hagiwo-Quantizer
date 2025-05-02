@@ -52,6 +52,7 @@ float oldPosition  = -999;//ロータリーエンコーダライブラリ用
 float newPosition = -999;
 
 
+
 //--------------------scale list---------------------------------
 //0=major
 const static word DAC_LSB_maj[61] PROGMEM = {
@@ -117,6 +118,17 @@ const static word CVIN_th_oct[62] PROGMEM = {
  0, 102, 307,  512,  717,  922,  1024
 };
 
+
+
+
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////// SETUP ///////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+
+
+
 void setup() {
  pinMode(ledPin1, OUTPUT); //Color_LED_R
  pinMode(ledPin2, OUTPUT); //Color_LED_G
@@ -129,30 +141,38 @@ void setup() {
  Serial.begin(9600);
 
  //DAC I2C通信
+ SPI.begin();
  MCP.begin(10);
 }
+
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////// LOOP ////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+
 
 
 void loop() {
  old_CV_IN = CV_IN;
 
-// Serial.print("Scale: "); 
-// Serial.println(scale);
+Serial.print("Scale: "); 
+Serial.println(scale);
+ 
+//Serial.print("CV_IN: ");
+//Serial.println(analogRead(cvPin));
 // 
-// Serial.print("CV_IN: ");
-// Serial.println(analogRead(cvPin));
+Serial.print("Slide Switch: ");
+Serial.println(digitalRead(slideSWPin));
 // 
-// Serial.print("Slide Switch: ");
-// Serial.println(digitalRead(slideSWPin));
-// 
-// Serial.print("Slide Pot: ");
-// Serial.println(analogRead(slidePotPin));
+//Serial.print("Slide Pot: ");
+//Serial.println(analogRead(slidePotPin));
 //
-// Serial.print("Slide CV: ");
-// Serial.println(analogRead(slidePotPin));
+//Serial.print("Slide CV: ");
+//Serial.println(analogRead(slidePotPin));
 // delay(500);
  
- //-----------ロータリーエンコーダ読み取り----------------
+ //-----------Rotary Encoder Reading----------------
  newPosition = myEnc.read();
  if ( (newPosition - 3) / 4  > oldPosition / 4) { //ロータリーエンコーダの分解能4で割る
    oldPosition = newPosition;
@@ -171,7 +191,7 @@ void loop() {
    scale = 0;
  }
 
- //-------------------LED表示----------------------
+ //-------------------LED----------------------
  switch (scale) {
    case 0://紫
      LED(255, 0, 0);
@@ -209,6 +229,9 @@ void loop() {
      break;
  }
 
+
+
+
  //--------------slide--------------------------------------
  slide_sw = digitalRead(slideSWPin);
  slide_CV = analogRead(slidePotPin);
@@ -220,6 +243,9 @@ void loop() {
  else if (slide_sw != 0 ) {//slide_sw ON
    slide = 1;
  }
+
+
+
 
  //----------------CV入出力設定--------------------------------------
  CV_IN = analogRead(cvPin);
@@ -235,7 +261,6 @@ void loop() {
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_maj[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_maj[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_maj[CV_INh])));
-           goto DAC_done;
          }
          break;
 
@@ -243,7 +268,6 @@ void loop() {
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_mp[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_mp[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_mp[CV_INh])));
-           goto DAC_done;
          }
          break;
 
@@ -251,7 +275,6 @@ void loop() {
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_mp7[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_mp7[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_mp7[CV_INh])));
-           goto DAC_done;
          }
          break;
 
@@ -259,7 +282,6 @@ void loop() {
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_hm[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_hm[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_hm[CV_INh])));
-           goto DAC_done;
          }
          break;
 
@@ -267,7 +289,6 @@ void loop() {
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_minp[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_minp[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_minp[CV_INh])));
-           goto DAC_done;
          }
          break;
 
@@ -275,7 +296,6 @@ void loop() {
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_chr[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_chr[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_chr[CV_INh])));
-           goto DAC_done;
          }
          break;
 
@@ -283,14 +303,14 @@ void loop() {
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_oct[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_oct[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_oct[CV_INh])));
-           goto DAC_done;
          }
          break;
 
      }
    }
  }
-DAC_done:
+
+
 
  //option:gaming mode (for only illumination)
  slide_IN = digitalRead(slidePin);
@@ -340,18 +360,20 @@ DAC_done:
 
 void DAC(long CV_OUT) { //CV_12bit_0-4095
  digitalWrite(triggerPin, HIGH);//trigger on
- //-----------slide OFF時のCV出力------------------
+ Serial.println("dac");
+
+ //-----------slide OFF------------------
  if ( slide == 0 || slide_time <= 3) {
-   MCP.write((CV_OUT >> 8) & 0x0F);
+   //MCP.write((CV_OUT >> 8) & 0x0F);
    MCP.write(CV_OUT, 0);
-   Serial.println(CV_OUT);
+   //Serial.println(CV_OUT);
    LED(0, 0, 0);
    delay(5);
    digitalWrite(triggerPin, LOW);
  }
 
  //-----------slide ON------------------
- else if ( slide == 1 && slide_time > 3 ) {
+ else {
 
    if ( old_CV_OUT <= CV_OUT) {
      while ( j <= slide_time) {
@@ -376,6 +398,8 @@ void DAC(long CV_OUT) { //CV_12bit_0-4095
 
    old_CV_OUT = CV_OUT;
  }
+
+
  digitalWrite(triggerPin, LOW) ;//gate
 }
 
