@@ -156,14 +156,14 @@ void setup() {
 void loop() {
  old_CV_IN = CV_IN;
 
-Serial.print("Scale: "); 
-Serial.println(scale);
+//Serial.print("Scale: "); 
+//Serial.println(scale);
  
 //Serial.print("CV_IN: ");
 //Serial.println(analogRead(cvPin));
 // 
-Serial.print("Slide Switch: ");
-Serial.println(digitalRead(slideSWPin));
+//Serial.print("Slide Switch: ");
+//Serial.println(digitalRead(slideSWPin));
 // 
 //Serial.print("Slide Pot: ");
 //Serial.println(analogRead(slidePotPin));
@@ -174,12 +174,12 @@ Serial.println(digitalRead(slideSWPin));
  
  //-----------Rotary Encoder Reading----------------
  newPosition = myEnc.read();
- if ( (newPosition - 3) / 4  > oldPosition / 4) { //ロータリーエンコーダの分解能4で割る
+ if ( (newPosition - 3) / 4  > oldPosition / 4) { //divide by 4 to get resolution of encoder
    oldPosition = newPosition;
    scale = scale - 1;
  }
 
- else if ( (newPosition + 3) / 4  < oldPosition / 4 ) { //ロータリーエンコーダの分解能4で割る
+ else if ( (newPosition + 3) / 4  < oldPosition / 4 ) { //divide by 4 to get resolution of encoder
    oldPosition = newPosition;
    scale = scale + 1;
  }
@@ -237,10 +237,12 @@ Serial.println(digitalRead(slideSWPin));
  slide_CV = analogRead(slidePotPin);
  slide_time = pow(slide_CV / 50, 2) + 1; //
 
- if (slide_sw == 0 ) {//slide_sw OFF
+ if (slide_sw == 0 ) {
+  //slide_sw OFF
    slide = digitalRead(slidePin);
  }
- else if (slide_sw != 0 ) {//slide_sw ON
+ else if (slide_sw != 0 ) {
+  //slide_sw ON
    slide = 1;
  }
 
@@ -249,6 +251,9 @@ Serial.println(digitalRead(slideSWPin));
 
  //----------------CV入出力設定--------------------------------------
  CV_IN = analogRead(cvPin);
+
+Serial.print("cv=");
+Serial.println(CV_IN);
 
  if ( abs(old_CV_IN - CV_IN ) > 10 ) {//ノイズ対策。CVに大きな変化があったら、音程を変える。
 
@@ -360,7 +365,8 @@ Serial.println(digitalRead(slideSWPin));
 
 void DAC(long CV_OUT) { //CV_12bit_0-4095
  digitalWrite(triggerPin, HIGH);//trigger on
- Serial.println("dac");
+ Serial.println("CV=out");
+ Serial.println(CV_OUT);
 
  //-----------slide OFF------------------
  if ( slide == 0 || slide_time <= 3) {
