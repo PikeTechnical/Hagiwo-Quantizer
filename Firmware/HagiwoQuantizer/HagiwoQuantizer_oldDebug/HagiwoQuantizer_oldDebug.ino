@@ -13,7 +13,7 @@ byte triggerPin = 2;
 int cvPin = A0;
 float CV_IN = 512;//CV_IN*60/1024
 float old_CV_IN = 512;//
-//int CV_INr = 512;//CV_IN
+int CV_INr = 512;//CV_IN
 int CV_INh = 10;//
 int i = 0; //
 long old_CV_OUT = 0;
@@ -50,7 +50,6 @@ byte ledPin3 = 4;
 Encoder myEnc(9, 12);//ロータリーエンコーダライブラリ用
 float oldPosition  = -999;//ロータリーエンコーダライブラリ用
 float newPosition = -999;
-
 
 
 //--------------------scale list---------------------------------
@@ -118,17 +117,6 @@ const static word CVIN_th_oct[62] PROGMEM = {
  0, 102, 307,  512,  717,  922,  1024
 };
 
-
-
-
-
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////// SETUP ///////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-
-
-
 void setup() {
  pinMode(ledPin1, OUTPUT); //Color_LED_R
  pinMode(ledPin2, OUTPUT); //Color_LED_G
@@ -137,56 +125,104 @@ void setup() {
  pinMode(slidePin, INPUT); //slide_in
  pinMode(slideSWPin, INPUT_PULLUP); //slide_sw
 
- //dev
+ //開発用通信設定
  Serial.begin(9600);
 
  //DAC I2C通信
- //SPI.begin();
  MCP.begin(10);
 }
 
 
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////// LOOP ////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-
-
-
 void loop() {
-  old_CV_IN = CV_IN;
-  readEncoder();
-  doLED();
-  doSlide();
-  calculateCV();
-}
+ old_CV_IN = CV_IN;
 
+// Serial.print("Scale: "); 
+// Serial.println(scale);
+// 
+// Serial.print("CV_IN: ");
+// Serial.println(analogRead(cvPin));
+// 
+// Serial.print("Slide Switch: ");
+// Serial.println(digitalRead(slideSWPin));
+// 
+// Serial.print("Slide Pot: ");
+// Serial.println(analogRead(slidePotPin));
+//
+// Serial.print("Slide CV: ");
+// Serial.println(analogRead(slidePotPin));
+// delay(500);
+ 
+ //-----------ロータリーエンコーダ読み取り----------------
+ newPosition = myEnc.read();
+ if ( (newPosition - 3) / 4  > oldPosition / 4) { //ロータリーエンコーダの分解能4で割る
+   oldPosition = newPosition;
+   scale = scale - 1;
+ }
 
+ else if ( (newPosition + 3) / 4  < oldPosition / 4 ) { //ロータリーエンコーダの分解能4で割る
+   oldPosition = newPosition;
+   scale = scale + 1;
+ }
 
+ if ( scale < 0) {
+   scale = 6;
+ }
+ else if ( scale >= 7 ) {
+   scale = 0;
+ }
 
-void doSlide(){
+ //-------------------LED表示----------------------
+ switch (scale) {
+   case 0://紫
+     LED(255, 0, 0);
+     now_R = 255;      now_G = 0;      now_B = 0;
+     break;
+
+   case 1://青
+     LED(0, 0, 255);
+     now_R = 0;      now_G = 0;      now_B = 255;
+     break;
+
+   case 2://水色
+     LED(0, 255, 0);
+     now_R = 0;      now_G = 255;      now_B = 0;
+     break;
+
+   case 3://緑
+     LED(255, 255, 0);
+     now_R = 255;      now_G = 255;      now_B = 0;
+     break;
+
+   case 4://黄色
+     LED(255, 0, 255);
+     now_R = 255;      now_G = 0;      now_B = 255;
+     break;
+
+   case 5://赤
+     LED(0, 255, 255);
+     now_R = 0;      now_G = 255;      now_B = 255;
+     break;
+
+   case 6://白
+     LED(255, 255, 255);
+     now_R = 255;      now_G = 255;      now_B = 255;
+     break;
+ }
+
  //--------------slide--------------------------------------
  slide_sw = digitalRead(slideSWPin);
  slide_CV = analogRead(slidePotPin);
  slide_time = pow(slide_CV / 50, 2) + 1; //
 
- if (slide_sw == 0 ) {
-  //slide_sw OFF
+ if (slide_sw == 0 ) {//slide_sw OFF
    slide = digitalRead(slidePin);
  }
- else if (slide_sw != 0 ) {
-  //slide_sw ON
+ else if (slide_sw != 0 ) {//slide_sw ON
    slide = 1;
  }
-}
 
-
-void calculateCV(){
  //----------------CV入出力設定--------------------------------------
  CV_IN = analogRead(cvPin);
-
-  Serial.print("cv=");
-  Serial.println(CV_IN);
 
  if ( abs(old_CV_IN - CV_IN ) > 10 ) {//ノイズ対策。CVに大きな変化があったら、音程を変える。
 
@@ -199,6 +235,7 @@ void calculateCV(){
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_maj[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_maj[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_maj[CV_INh])));
+           goto DAC_done;
          }
          break;
 
@@ -206,6 +243,7 @@ void calculateCV(){
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_mp[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_mp[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_mp[CV_INh])));
+           goto DAC_done;
          }
          break;
 
@@ -213,6 +251,7 @@ void calculateCV(){
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_mp7[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_mp7[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_mp7[CV_INh])));
+           goto DAC_done;
          }
          break;
 
@@ -220,6 +259,7 @@ void calculateCV(){
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_hm[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_hm[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_hm[CV_INh])));
+           goto DAC_done;
          }
          break;
 
@@ -227,6 +267,7 @@ void calculateCV(){
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_minp[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_minp[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_minp[CV_INh])));
+           goto DAC_done;
          }
          break;
 
@@ -234,6 +275,7 @@ void calculateCV(){
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_chr[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_chr[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_chr[CV_INh])));
+           goto DAC_done;
          }
          break;
 
@@ -241,17 +283,15 @@ void calculateCV(){
          if ( CV_IN >= (pgm_read_word(&(CVIN_th_oct[i]))) && CV_IN < (pgm_read_word(&(CVIN_th_oct[i + 1])))) {
            CV_INh = i;
            DAC(pgm_read_word(&(DAC_LSB_oct[CV_INh])));
+           goto DAC_done;
          }
          break;
 
      }
    }
  }
-}
+DAC_done:
 
-
-
-/*
  //option:gaming mode (for only illumination)
  slide_IN = digitalRead(slidePin);
  if ( scale == 6 && slide_sw == 1 && slide_IN == 1) {
@@ -296,93 +336,22 @@ void calculateCV(){
 
  }
 }
-*/
-
-
-
-
-
-void readEncoder(){
-//-----------Rotary Encoder Reading----------------
- newPosition = myEnc.read();
- if ( (newPosition - 3) / 4  > oldPosition / 4) { //divide by 4 to get resolution of encoder
-   oldPosition = newPosition;
-   scale = scale - 1;
- }
-
- else if ( (newPosition + 3) / 4  < oldPosition / 4 ) { //divide by 4 to get resolution of encoder
-   oldPosition = newPosition;
-   scale = scale + 1;
- }
-
- if ( scale < 0) {
-   scale = 6;
- }
- else if ( scale >= 7 ) {
-   scale = 0;
- }
-}
-
-
-void doLED(){
- //-------------------LED----------------------
- switch (scale) {
-   case 0://紫
-     LED(255, 0, 0);
-     now_R = 255;      now_G = 0;      now_B = 0;
-     break;
-
-   case 1://青
-     LED(0, 0, 255);
-     now_R = 0;      now_G = 0;      now_B = 255;
-     break;
-
-   case 2://水色
-     LED(0, 255, 0);
-     now_R = 0;      now_G = 255;      now_B = 0;
-     break;
-
-   case 3://緑
-     LED(255, 255, 0);
-     now_R = 255;      now_G = 255;      now_B = 0;
-     break;
-
-   case 4://黄色
-     LED(255, 0, 255);
-     now_R = 255;      now_G = 0;      now_B = 255;
-     break;
-
-   case 5://赤
-     LED(0, 255, 255);
-     now_R = 0;      now_G = 255;      now_B = 255;
-     break;
-
-   case 6://白
-     LED(255, 255, 255);
-     now_R = 255;      now_G = 255;      now_B = 255;
-     break;
- }
-}
-
 
 
 void DAC(long CV_OUT) { //CV_12bit_0-4095
  digitalWrite(triggerPin, HIGH);//trigger on
- Serial.println("CV=out");
- Serial.println(CV_OUT);
-
- //-----------slide OFF------------------
+ //-----------slide OFF時のCV出力------------------
  if ( slide == 0 || slide_time <= 3) {
-   //MCP.write((CV_OUT >> 8) & 0x0F);
+   MCP.write((CV_OUT >> 8) & 0x0F);
    MCP.write(CV_OUT, 0);
-   //Serial.println(CV_OUT);
+   Serial.println(CV_OUT);
    LED(0, 0, 0);
    delay(5);
    digitalWrite(triggerPin, LOW);
  }
 
  //-----------slide ON------------------
- else {
+ else if ( slide == 1 && slide_time > 3 ) {
 
    if ( old_CV_OUT <= CV_OUT) {
      while ( j <= slide_time) {
@@ -407,8 +376,6 @@ void DAC(long CV_OUT) { //CV_12bit_0-4095
 
    old_CV_OUT = CV_OUT;
  }
-
-
  digitalWrite(triggerPin, LOW) ;//gate
 }
 
