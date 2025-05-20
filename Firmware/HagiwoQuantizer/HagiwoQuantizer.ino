@@ -13,7 +13,9 @@ byte triggerPin = 2;
 int cvPin = A0;
 float CV_IN = 512;//CV_IN*60/1024
 float old_CV_IN = 512;//
+
 //int CV_INr = 512;//CV_IN
+
 int CV_INh = 10;//
 int i = 0; //
 long old_CV_OUT = 0;

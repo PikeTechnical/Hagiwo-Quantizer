@@ -1,29 +1,29 @@
-#define  ENCODER_OPTIMIZE_INTERRUPTS //エンコーダノイズ対策
+#define  ENCODER_OPTIMIZE_INTERRUPTS //Encoder noise countermeasures
 #include <Wire.h>
 #include <Encoder.h>
 #include <MCP_DAC.h>
 
 MCP4821 MCP(11,13);  
 
-//CV入出力用定数
-float CV_IN = 512;//CV_IN*60/1024の値。後にroundで四捨五入する
+//CV I/O Constants
+float CV_IN = 512;// The value of CV_IN*60/1024. Round it off later.
 float old_CV_IN = 512;//
-int CV_INr = 512;//CV_INを四捨五入した値
-int CV_INh = 10;//閾値の判定結果
-int i = 0; //スケール検索用
+int CV_INr = 512;//CV_IN rounded off
+int CV_INh = 10;//Threshold judgment result
+int i = 0; //For scale search
 long old_CV_OUT = 0;
 
-//slide設定用定数
-int slide_CV = 0 ; //slide_knobの読取値
-int slide_time = 1 ; //タイマー周期を掛けた値が実際のslide time。カウントはこの値まで増え続ける。
+//Slide setting constant
+int slide_CV = 0 ; //slide_knob reading
+int slide_time = 1 ; // The value multiplied by the timer period is the actual slide time. The count will continue to increment up to this value.
 int scale = 0;
 byte slide = 0;//0=OFF,1=ON
 byte slide_sw = 0;//0=EXT,1=ON
 int j = 0;
 
 //illumination mode
-byte slide_IN = 0;//突入トリガー条件のひとつ
-int k = 0;//illumination変調用
+byte slide_IN = 0;   //One of the entry trigger conditions
+int k = 0;//For illumination modulation
 int illR = 0;
 int illG = 100;
 int illB = 200;
@@ -33,9 +33,9 @@ int now_R = 100;
 int now_G = 100;
 int now_B = 100;
 
-//ロータリーエンコーダ設定
-Encoder myEnc(9,12);//ロータリーエンコーダライブラリ用
-float oldPosition  = -999;//ロータリーエンコーダライブラリ用
+//Rotary Encoder Settings
+Encoder myEnc(9, 12);//For rotary encoder library
+float oldPosition  = -999;//For rotary encoder library
 float newPosition = -999;
 
 //pins///////////////////////////
@@ -115,6 +115,19 @@ const static word CVIN_th_oct[62] PROGMEM = {
  0, 102, 307,  512,  717,  922,  1024
 };
 
+
+
+////////////////////////////SETUP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////SETUP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////SETUP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////SETUP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////SETUP////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 void setup() {
  pinMode(ledPin1, OUTPUT); //Color_LED_R
  pinMode(ledPin2, OUTPUT); //Color_LED_G
@@ -123,25 +136,38 @@ void setup() {
  pinMode(slidePin, INPUT); //slide_in
  pinMode(slide_CV, INPUT_PULLUP); //slide_sw
 
- //開発用通信設定
+ //debug
  Serial.begin(9600);
 
- //DAC I2C通信
+ //DAC I2C
  MCP.begin(10);
 }
+
+
+
+
+
+////////////////////////////LOOP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////LOOP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////LOOP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////LOOP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////LOOP////////////////////////////////////////////////////////////////////////////////
+////////////////////////////LOOP////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 void loop() {
  old_CV_IN = CV_IN;
 
- //-----------ロータリーエンコーダ読み取り----------------
+ //-----------Rotary Encoder Reading----------------
  newPosition = myEnc.read();
- if ( (newPosition - 3) / 4  > oldPosition / 4) { //ロータリーエンコーダの分解能4で割る
+ if ( (newPosition - 3) / 4  > oldPosition / 4) { //Divide by 4 to get the resolution of the rotary encoder
    oldPosition = newPosition;
    scale = scale - 1;
  }
 
- else if ( (newPosition + 3) / 4  < oldPosition / 4 ) { //ロータリーエンコーダの分解能4で割る
+ else if ( (newPosition + 3) / 4  < oldPosition / 4 ) { //Divide by 4 to get the resolution of the rotary encoder
    oldPosition = newPosition;
    scale = scale + 1;
  }
@@ -368,7 +394,7 @@ void DAC(long CV_OUT) { //CV出力_12bit_0-4095
 }
 
 void LED(byte R, byte G, byte B) {
- analogWrite(9, R);
- analogWrite(10, G);
- analogWrite(11, B);
+ analogWrite(9, 255-R);
+ analogWrite(10, 255-G);
+ analogWrite(11, 255-B);
 }
