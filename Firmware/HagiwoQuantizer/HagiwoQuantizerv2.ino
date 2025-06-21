@@ -14,8 +14,6 @@ int cvPin = A0;
 float CV_IN = 512;//CV_IN*60/1024
 float old_CV_IN = 512;//
 
-//int CV_INr = 512;//CV_IN
-
 int CV_INh = 10;//
 int i = 0; //
 long old_CV_OUT = 0;
@@ -36,7 +34,7 @@ int j = 0;
 byte slide_IN = 0;//
 int k = 0;//illumination
 int illR = 0;
-int illG = 200;
+int illG = 100;
 int illB = 200;
 
 //LED
@@ -58,7 +56,7 @@ float newPosition = -999;
 //--------------------scale list---------------------------------
 //0=major
 const static word DAC_LSB_maj[61] PROGMEM = {
- 0,  137,  205,  341,  478,  546,  683,  819,  956,  1024, 1161, 1297, 1365, 1502, 1638, 1775, 1843, 1980, 2116, 2185, 2321, 2458, 2594, 2662, 2799, 2935, 3004, 3140, 3277, 3413, 3482, 3618, 3755, 3823, 3959, 4095
+ 0, 167, 250, 416, 584, 667, 834, 1000, 1167, 1250, 1418, 1584, 1667, 1834, 2000, 2167, 2250, 2418, 2584, 2668, 2834, 3001, 3167, 3250, 3418, 3584, 3668, 3834, 4001
 };
 
 const static word CVIN_th_maj[62] PROGMEM = {
@@ -67,7 +65,7 @@ const static word CVIN_th_maj[62] PROGMEM = {
 
 //1=major_pentatonic
 const static word DAC_LSB_mp[61] PROGMEM = {
- 0,  205,  341,  478,  683,  819,  1024, 1161, 1297, 1502, 1638, 1843, 1980, 2116, 2321, 2458, 2662, 2799, 2935, 3140, 3277, 3482, 3618, 3755, 3959, 4095
+ 0, 250, 416, 584, 834, 1000, 1250, 1418, 1584, 1834, 2000, 2250, 2418, 2584, 2834, 3001, 3250, 3418, 3584, 3834, 4001
 };
 
 const static word CVIN_th_mp[62] PROGMEM = {
@@ -76,7 +74,7 @@ const static word CVIN_th_mp[62] PROGMEM = {
 
 //2=major_pentatonic+7
 const static word DAC_LSB_mp7[61] PROGMEM = {
- 0,  137,  205,  341,  478,  683,  819,  956,  1024, 1161, 1297, 1502, 1638, 1775, 1843, 1980, 2116, 2321, 2458, 2594, 2662, 2799, 2935, 3140, 3277, 3413, 3482, 3618, 3755, 3959, 4095
+ 0, 167, 250, 416, 584, 834, 1000, 1167, 1250, 1418, 1584, 1834, 2000, 2167, 2250, 2418, 2584, 2834, 3001, 3167, 3250, 3418, 3584, 3834, 4001
 };
 
 const static word CVIN_th_mp7[62] PROGMEM = {
@@ -85,7 +83,7 @@ const static word CVIN_th_mp7[62] PROGMEM = {
 
 //3=harmonic_minor
 const static word DAC_LSB_hm[61] PROGMEM = {
- 68,  137,  205,  341,  410,  546,  683,  887,  956,  1024, 1161, 1229, 1365, 1502, 1707, 1775, 1843, 1980, 2048, 2185, 2321, 2526, 2594, 2662, 2799, 2867, 3004, 3140, 3345, 3413, 3482, 3618, 3686, 3823, 3959
+ 83, 167, 250, 416, 501, 667, 834, 1084, 1167, 1250, 1418, 1502, 1667, 1834, 2084, 2167, 2250, 2418, 2501, 2668, 2834, 3084, 3167, 3250, 3418, 3501, 3668, 3834, 4084
 };
 
 const static word CVIN_th_hm[62] PROGMEM = {
@@ -94,31 +92,33 @@ const static word CVIN_th_hm[62] PROGMEM = {
 
 //4=monor_pentatonic
 const static word DAC_LSB_minp[61] PROGMEM = {
- 205,  341,  410,  683,  751,  1024, 1161, 1229, 1502, 1570, 1843, 1980, 2048, 2321, 2389, 2662, 2799, 2867, 3140, 3209, 3482, 3618, 3686, 3959, 4028
+ 250, 416, 501, 834, 918, 1250, 1418, 1502, 1834, 1918, 2250, 2418, 2501, 2834, 2918, 3250, 3418, 3501, 3834, 3918
 };
 
 const static word CVIN_th_minp[62] PROGMEM = {
  0, 21, 64, 107,  150,  193,  236,  279,  322,  365,  408,  451,  494,  537,  580,  623,  666,  709,  752,  795,  838,  881,  924,  967,  1010, 1024
 };
 
-
 //5=chromatic
 const static word DAC_LSB_chr[61] PROGMEM = {
- 0,  68, 137,  205,  273,  341,  410,  478,  546,  614,  683,  751,  819,  887,  956,  1024, 1092, 1161, 1229, 1297, 1365, 1434, 1502, 1570, 1638, 1707, 1775, 1843, 1911, 1980, 2048, 2116, 2185, 2253, 2321, 2389, 2458, 2526, 2594, 2662, 2731, 2799, 2867, 2935, 3004, 3072, 3140, 3209, 3277, 3345, 3413, 3482, 3550, 3618, 3686, 3755, 3823, 3891, 3959, 4028, 4095
+ 0, 83, 167, 250, 334, 416, 501, 584, 667, 751, 834, 918, 1000, 1084, 1167, 1250, 1334, 1418, 1502, 1584, 1667, 1751, 1834, 1918, 2000, 2084, 2167, 2250, 2334, 2418, 2501, 2584, 2668, 2751, 2834, 2918, 3001, 3084, 3167, 3250, 3334, 3418, 3501, 3584, 3668, 3751, 3834, 3918, 4001, 4084
 };
 
 const static word CVIN_th_chr[62] PROGMEM = {
  0, 9,  26, 43, 60, 77, 94, 111,  128,  145,  162,  179,  196,  213,  230,  247,  264,  281,  298,  315,  332,  349,  366,  383,  400,  417,  434,  451,  468,  485,  502,  519,  536,  553,  570,  587,  604,  621,  638,  655,  672,  689,  706,  723,  740,  757,  774,  791,  808,  825,  842,  859,  876,  893,  910,  927,  944,  961,  978,  995,  1012, 1024
 };
 
+
 //6=octave
 const static word DAC_LSB_oct[61] PROGMEM = {
- 0,  819,  1638, 2458, 3277, 4095
+ 0, 1000, 2000, 3001, 4001
+// 0,245,378,670,996,1363,1563,2000,2244,2378,2669,2996,3363,3563,3999,4244,4377,4669,4995,5362,5562,5999
 };
 
 const static word CVIN_th_oct[62] PROGMEM = {
  0, 102, 307,  512,  717,  922,  1024
 };
+
 
 
 
@@ -146,6 +146,7 @@ void setup() {
 
  //SPI.begin();
  MCP.begin(10);
+ MCP.setGain(2);
 
 }
 
@@ -192,9 +193,12 @@ void calculateCV(){
   Serial.print("cv=");
   Serial.println(CV_IN);
 
+
  if ( abs(old_CV_IN - CV_IN ) > 10 ) {//ノイズ対策。CVに大きな変化があったら、音程を変える。
 
    j = 0;//slide reset
+
+
 
    for ( i = 0; i <= 61 ; i++ ) {
      switch (scale) {
@@ -251,6 +255,7 @@ void calculateCV(){
      }
    }
  }
+ 
 }
 
 
@@ -306,8 +311,7 @@ void calculateCV(){
 
 
 
-void readEncoder(){
-//-----------Rotary Encoder Reading----------------
+void readEncoder(){    //-----------Rotary Encoder Reading----------------
  newPosition = myEnc.read();
  if ( (newPosition - 3) / 4  > oldPosition / 4) { //divide by 4 to get resolution of encoder
    oldPosition = newPosition;
@@ -328,41 +332,40 @@ void readEncoder(){
 }
 
 
-void doLED(){
- //-------------------LED----------------------
+void doLED(){          //-------------------LED----------------------
  switch (scale) {
    case 0://紫
-     LED(255, 0, 0);  //red
+     LED(255, 0, 0);
      now_R = 255;      now_G = 0;      now_B = 0;
      break;
 
    case 1://青
-     LED(0, 0, 255);  //blue
+     LED(0, 0, 255);
      now_R = 0;      now_G = 0;      now_B = 255;
      break;
 
-   case 2://水色      //green
+   case 2://水色
      LED(0, 255, 0);
      now_R = 0;      now_G = 255;      now_B = 0;
      break;
 
    case 3://緑
-     LED(255, 255, 0);    //orange?
+     LED(255, 255, 0);
      now_R = 255;      now_G = 255;      now_B = 0;
      break;
 
    case 4://黄色
-     LED(255, 0, 255);    //purple
+     LED(255, 0, 255);
      now_R = 255;      now_G = 0;      now_B = 255;
      break;
 
    case 5://赤
-     LED(0, 255, 255);    //teal
+     LED(0, 255, 255);
      now_R = 0;      now_G = 255;      now_B = 255;
      break;
 
    case 6://白
-     LED(255, 255, 255);    //white
+     LED(255, 255, 255);
      now_R = 255;      now_G = 255;      now_B = 255;
      break;
  }
@@ -372,14 +375,10 @@ void doLED(){
 
 void DAC(long CV_OUT) { //CV_12bit_0-4095
  digitalWrite(triggerPin, HIGH);//trigger on
- Serial.println("CV=out");
- Serial.println(CV_OUT);
 
  //-----------slide OFF------------------
  if ( slide == 0 || slide_time <= 3) {
-   //MCP.write((CV_OUT >> 8) & 0x0F);
    MCP.write(CV_OUT, 0);
-   //Serial.println(CV_OUT);
    LED(0, 0, 0);
    delay(5);
    digitalWrite(triggerPin, LOW);
